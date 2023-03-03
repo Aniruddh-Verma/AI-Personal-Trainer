@@ -10,7 +10,7 @@ engine = create_engine('sqlite:///database.sqlite')
 session = sessionmaker(bind=engine)
 sess = session()
 
-@app.route('/index', methods=['GET', 'POST'])
+@app.route('/', methods=['GET', 'POST'])
 def index():
     return render_template('base.html',title='login')
 

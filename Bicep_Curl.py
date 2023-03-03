@@ -2,6 +2,9 @@ import cv2
 import mediapipe as mp
 import numpy as np
 
+mp_drawing = mp.solutions.drawing_utils
+mp_pose = mp.solutions.pose
+
 # Curl Counter Vaariables 
 counter = 0 
 stage = None
@@ -23,7 +26,20 @@ def both_bicep_curl_angle(left=[],right=[]):
       right_angle = calculate_bicep_curl_angle(right[0],right[1],right[2])
       return left_angle,right_angle
 
-def show_excercise(video, ex=1, *points, min_detection_confidence=0.5, min_tracking_confidence=0.5):
+def get_coords(landmarks,point):
+      return  [landmarks[point.value].x,landmarks[point.value].y]
+
+def render_bicep_curl(image,points,win_size=[640,480]):
+      white = (255,255,255)
+      cv2.putText(image,f'{points["elbow"]:.1f}',tuple(np.multiply(points["elbow"],win_size).astype(int)),cv2.FONT_HERSHEY_SIMPLEX, 0.5,white,2, cv2.LINE_AA)
+      cv2.circle(image,tuple(np.multiply(points["elbow"],[640,480]).astype(int)),5,white,cv2.FILLED)
+      cv2.circle(image,tuple(np.multiply(points["shoulder"],[640,480]).astype(int)),5,white,cv2.FILLED)
+      cv2.circle(image,tuple(np.multiply(points["wrist"],[640,480]).astype(int)),5,white,cv2.FILLED)
+      cv2.line(image,tuple(np.multiply(points["elbow"],[640,480]).astype(int)),tuple(np.multiply(points["shoulder"],[640,480]).astype(int)),white,2)
+      cv2.line(image,tuple(np.multiply(points["wrist"],[640,480]).astype(int)),tuple(np.multiply(points["elbow"],[640,480]).astype(int)),white,2)
+      
+
+def show_excercise(video, ex=1, min_detection_confidence=0.5, min_tracking_confidence=0.5, **points,):
       global counter,stage
       with mp_pose.Pose(min_detection_confidence=min_detection_confidence, min_tracking_confidence=min_tracking_confidence) as pose:    #importing Pose model as a variable pose
             while video.isOpened():       
@@ -41,44 +57,36 @@ def show_excercise(video, ex=1, *points, min_detection_confidence=0.5, min_track
 
                   # Extracting Landmarks 
                   try:
+
+
                         landmarks=results.pose_landmarks.landmark
+                        if landmarks != None:
+                              # Getting Coordinates
+                              joints = {}
+                              if len(points) == 3 and ex==1:
+                                    for name, point in points.items():
+                                          joints[name] = get_coords(landmarks,point)
+                                    
+                                    angle = calculate_bicep_curl_angle(joints['shoulder'],joints['elbow'],joints['wrist'])
+                                    
+                                    #Visualize Text 
+                                    render_bicep_curl(img,results,points)
 
-                        # Getting Coordinates
-                        if len(points) == 3 and ex==1:
-                              shoulder = [landmarks[points[0].value].x,landmarks[points[0].value].y]
-                              elbow = [landmarks[points[1].value].x,landmarks[points[1].value].y]
-                              wrist = [landmarks[points[2].value].x,landmarks[points[2].value].y]
+                                    # Curl Counter Logic 
+                                    if angle > 160:
+                                          stage= "Down" 
+                                    if angle < 55 and stage == "Down":
+                                          stage= "Up"
+                                          counter += 1
+                                          print(counter)
 
-                              # Calculating Angles 
-                              angle = calculate_bicep_curl_angle(shoulder,elbow,wrist)
-
-                              #Visualize Text 
-                              cv2.putText(image,f'{angle:.1f}',
-                                          tuple(np.multiply(elbow,[640,480]).astype(int)),
-                                          cv2.FONT_HERSHEY_SIMPLEX, 0.5,(255,255,255),2, cv2.LINE_AA)
-                              
-                              cv2.circle(image,tuple(np.multiply(elbow,[640,480]).astype(int)),5,(255,255,255),cv2.FILLED)
-                              cv2.circle(image,tuple(np.multiply(shoulder,[640,480]).astype(int)),5,(255,255,255),cv2.FILLED)
-                              cv2.circle(image,tuple(np.multiply(wrist,[640,480]).astype(int)),5,(255,255,255),cv2.FILLED)
-                              cv2.line(image,tuple(np.multiply(elbow,[640,480]).astype(int)),tuple(np.multiply(shoulder,[640,480]).astype(int)),(255,255,255),2)
-                              cv2.line(image,tuple(np.multiply(wrist,[640,480]).astype(int)),tuple(np.multiply(elbow,[640,480]).astype(int)),(255,255,255),2)
-
-
-                              # Curl Counter Logic 
-                              if angle > 160:
-                                    stage= "Down" 
-                              if angle < 55 and stage == "Down":
-                                    stage= "Up"
-                                    counter += 1
-                                    print(counter)
-
-                        if len(points) == 6 and ex==3:
-                              left_shoulder = [landmarks[points[0].value].x,landmarks[points[0].value].y]
-                              left_elbow = [landmarks[points[1].value].x,landmarks[points[1].value].y]
-                              left_wrist = [landmarks[points[2].value].x,landmarks[points[2].value].y]
-                              right_shoulder = [landmarks[points[3].value].x,landmarks[points[3].value].y]
-                              right_elbow = [landmarks[points[4].value].x,landmarks[points[4].value].y]
-                              right_wrist = [landmarks[points[5].value].x,landmarks[points[5].value].y]
+                              if len(points) == 6 and ex==2:
+                                    left_shoulder = [landmarks[points[0].value].x,landmarks[points[0].value].y]
+                                    left_elbow = [landmarks[points[1].value].x,landmarks[points[1].value].y]
+                                    left_wrist = [landmarks[points[2].value].x,landmarks[points[2].value].y]
+                                    right_shoulder = [landmarks[points[3].value].x,landmarks[points[3].value].y]
+                                    right_elbow = [landmarks[points[4].value].x,landmarks[points[4].value].y]
+                                    right_wrist = [landmarks[points[5].value].x,landmarks[points[5].value].y]
 
                               # Calculating Angles
                               left_angle,right_angle = both_bicep_curl_angle([left_shoulder,left_elbow,left_wrist],[right_shoulder,right_elbow,right_wrist])
