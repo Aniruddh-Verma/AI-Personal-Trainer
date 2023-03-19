@@ -28,16 +28,16 @@
             <!--fife : IF and Else-->
             {% if not session.isauth %}
             <li class="nav-item">
-                  <a class="nav-link" href="/signin">Logout</a>
+                  <a class="nav-link" href="/Home">Logout</a>
             </li>
             {% else %}
             <li class="nav-item">
-                  <a class="nav-link" href="/Logout">Login</a>
+                  <a class="nav-link" href="/signin">Login</a>
             </li>
             {% endif %}
             
             <li class="nav-item">
-                  <a class="nav-link disabled" href="/signin">Register</a>
+                  <a class="nav-link" href="/signin">Register</a>
             </li>
       </ul>
       

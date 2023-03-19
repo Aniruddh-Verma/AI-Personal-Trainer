@@ -3,7 +3,39 @@
 {% block css %}{% endblock %}
 
 {% block body %}
-      <h1>Register Here!!!</h1>
+      <div class = "container">
+            <div class = "row">
+                  <div class = "col-sm-12 col-md-6">
+                        <div class = "card shadow-lg m-4">
+                              <div class = "card-header">
+                                    <div class="card-title"><h2>Registration Form</h2></div>
+                              <form method = "POST" class = "p-2">
+                                    <div class="form-group">
+                                      <label for="name">Your Name</label>
+                                      <input type="text" class="form-control" name="name" id="name" aria-describedby="helpId" placeholder="John Doe">
+                                      <small id="helpId" class="form-text text-muted">Fill in Your Name</small>
+                                    </div>
+                                    <div class="form-group">
+                                      <label for="E-Mail">Email Adress</label>
+                                      <input type="text" class="form-control" name="" id="" aria-describedby="helpId" placeholder="john@gmail.com"> 
+                                      <small id="Email Help" class="form-text text-muted">Enter a valid email Adress</small>
+                                    </div>
+                                    <div class="form-group">
+                                      <label for="">Password</label>
+                                      <input type="password" class="form-control" name="Password" id="Password" a ria-describedby="passhelpId" placeholder="minimum 6 character ">
+                                      <small id="helpId" class="form-text text-muted"></small>
+                                    </div>
+                                    <div class="form-group">
+                                      <label for="cpassword">Confirm Password</label>
+                                      <input type="cpassword" class="form-control" name="cpassword" id="cpassword" aria-describedby="helpId" placeholder="">
+                                      <small id="cpasshelpId" class="form-text text-muted">enter a good password</small>
+                                    </div>
+                                    <button class="btn btn-success btn-block">Continue</button>
+                              </form>
+                        </div>
+                  </div>
+            </div>
+      </div>
 {% endblock %}
 
 {% block js %}{% endblock %}

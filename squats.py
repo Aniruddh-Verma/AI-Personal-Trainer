@@ -9,7 +9,7 @@ mp_pose = mp.solutions.pose
 counter = 0 
 stage = None
       
-def calculate_bicep_curl_angle(a,b,c):
+def calculate_squats_angle(a,b,c):
       a=np.array(a) #First
       b=np.array(b) # mid
       c=np.array(c) #End
@@ -22,9 +22,9 @@ def calculate_bicep_curl_angle(a,b,c):
       return angle
 
 # Double Arm Curling
-def both_bicep_curl_angle(left=[],right=[]):
-      left_angle = calculate_bicep_curl_angle(left[0],left[1],left[2])
-      right_angle = calculate_bicep_curl_angle(right[0],right[1],right[2])
+def calculate_both_leg_squats(left=[],right=[]):
+      left_angle = calculate_squats_angle(left[0],left[1],left[2])
+      right_angle = calculate_squats_angle(right[0],right[1],right[2])
       return left_angle,right_angle
 
 # Getting Coordinates of joints 
@@ -32,18 +32,18 @@ def get_coords(landmarks,point):
       return  [landmarks[point.value].x,landmarks[point.value].y]
 
 # Visualizing Text
-def render_bicep_curl(image,points,win_size=[640,480]):
+def render_squats(image,points,win_size=[640,480]):
       white = (255,255,255)
-      cv2.putText(image,f'{points["elbow"]:.1f}',tuple(np.multiply(points["elbow"],win_size).astype(int)),cv2.FONT_HERSHEY_SIMPLEX, 0.5,white,2, cv2.LINE_AA)
-      cv2.circle(image,tuple(np.multiply(points["elbow"],[640,480]).astype(int)),5,white,cv2.FILLED)
-      cv2.circle(image,tuple(np.multiply(points["shoulder"],[640,480]).astype(int)),5,white,cv2.FILLED)
-      cv2.circle(image,tuple(np.multiply(points["wrist"],[640,480]).astype(int)),5,white,cv2.FILLED)
-      cv2.line(image,tuple(np.multiply(points["elbow"],[640,480]).astype(int)),tuple(np.multiply(points["shoulder"],[640,480]).astype(int)),white,2)
-      cv2.line(image,tuple(np.multiply(points["wrist"],[640,480]).astype(int)),tuple(np.multiply(points["elbow"],[640,480]).astype(int)),white,2)
+      cv2.putText(image,f'{points["Knee"]:.1f}',tuple(np.multiply(points["Knee"],win_size).astype(int)),cv2.FONT_HERSHEY_SIMPLEX, 0.5,white,2, cv2.LINE_AA)
+      cv2.circle(image,tuple(np.multiply(points["Hip"],[640,480]).astype(int)),5,white,cv2.FILLED)
+      cv2.circle(image,tuple(np.multiply(points["Knee"],[640,480]).astype(int)),5,white,cv2.FILLED)
+      cv2.circle(image,tuple(np.multiply(points["Ankle"],[640,480]).astype(int)),5,white,cv2.FILLED)
+      cv2.line(image,tuple(np.multiply(points["Hip"],[640,480]).astype(int)),tuple(np.multiply(points["Knee"],[640,480]).astype(int)),white,2)
+      cv2.line(image,tuple(np.multiply(points["Ankle"],[640,480]).astype(int)),tuple(np.multiply(points["Knee"],[640,480]).astype(int)),white,2)
 
      
 
-def show_excercise( video, ex=1, min_detection_confidence=0.5, min_tracking_confidence=0.5, **points[]):
+def show_excercise(video, ex=3, min_detection_confidence=0.5, min_tracking_confidence=0.5, **points[]):
       global counter,stage
       with mp_pose.Pose(min_detection_confidence=min_detection_confidence, min_tracking_confidence=min_tracking_confidence) as pose:    #importing Pose model as a variable pose
             while video.isOpened():       
@@ -72,10 +72,10 @@ def show_excercise( video, ex=1, min_detection_confidence=0.5, min_tracking_conf
                                     for name, point in points.items():
                                           joints[name] = get_coords(landmarks,point)
                                     
-                                    angle = calculate_bicep_curl_angle(joints['shoulder'],joints['elbow'],joints['wrist'])
+                                    angle = calculate_squats_angle(joints['Hip'],joints['Knee'],joints['Ankle'])
                                     
                                     #Visualize Text 
-                                    render_bicep_curl(img,results,points)
+                                    render_squats(img,results,points)
 
                         
                                     # Curl Counter Logic 
@@ -88,31 +88,31 @@ def show_excercise( video, ex=1, min_detection_confidence=0.5, min_tracking_conf
                               
 
                               if len(points) == 6 and ex==2:
-                                    left_shoulder = [landmarks[points[0].value].x,landmarks[points[0].value].y]
-                                    left_elbow = [landmarks[points[1].value].x,landmarks[points[1].value].y]
-                                    left_wrist = [landmarks[points[2].value].x,landmarks[points[2].value].y]
-                                    right_shoulder = [landmarks[points[3].value].x,landmarks[points[3].value].y]
-                                    right_elbow = [landmarks[points[4].value].x,landmarks[points[4].value].y]
-                                    right_wrist = [landmarks[points[5].value].x,landmarks[points[5].value].y]
+                                    left_hip = [landmarks[points[0].value].x,landmarks[points[0].value].y]
+                                    left_knee = [landmarks[points[1].value].x,landmarks[points[1].value].y]
+                                    left_ankle= [landmarks[points[2].value].x,landmarks[points[2].value].y]
+                                    right_hip = [landmarks[points[3].value].x,landmarks[points[3].value].y]
+                                    right_knee = [landmarks[points[4].value].x,landmarks[points[4].value].y]
+                                    right_ankle = [landmarks[points[5].value].x,landmarks[points[5].value].y]
 
                               # Calculating Angles
-                              left_angle,right_angle = both_bicep_curl_angle([left_shoulder,left_elbow,left_wrist],[right_shoulder,right_elbow,right_wrist])
+                              left_angle,right_angle = calculate_both_leg_squats([left_ankle,left_knee,left_hip],[right_ankle,right_knee,right_hip])
                               cv2.putText(image,f'{left_angle:.1f}',
-                                          tuple(np.multiply(left_elbow,[640,480]).astype(int)),
+                                          tuple(np.multiply(left_knee,[640,480]).astype(int)),
                                           cv2.FONT_HERSHEY_SIMPLEX, 0.5,(255,255,255),2, cv2.LINE_AA)
                               cv2.putText(image,f'{right_angle:.1f}',
-                                          tuple(np.multiply(right_elbow,[640,480]).astype(int)),
+                                          tuple(np.multiply(right_knee,[640,480]).astype(int)),
                                           cv2.FONT_HERSHEY_SIMPLEX, 0.5,(255,255,255),2, cv2.LINE_AA)
-                              cv2.circle(image,tuple(np.multiply(left_elbow,[640,480]).astype(int)),5,(255,255,255),cv2.FILLED)
-                              cv2.circle(image,tuple(np.multiply(left_shoulder,[640,480]).astype(int)),5,(255,255,255),cv2.FILLED)
-                              cv2.circle(image,tuple(np.multiply(left_wrist,[640,480]).astype(int)),5,(255,255,255),cv2.FILLED)
-                              cv2.line(image,tuple(np.multiply(left_elbow,[640,480]).astype(int)),tuple(np.multiply(left_shoulder,[640,480]).astype(int)),(255,255,255),2)
-                              cv2.line(image,tuple(np.multiply(left_wrist,[640,480]).astype(int)),tuple(np.multiply(left_elbow,[640,480]).astype(int)),(255,255,255),2)
-                              cv2.circle(image,tuple(np.multiply(right_elbow,[640,480]).astype(int)),5,(255,255,255),cv2.FILLED)
-                              cv2.circle(image,tuple(np.multiply(right_shoulder,[640,480]).astype(int)),5,(255,255,255),cv2.FILLED)
-                              cv2.circle(image,tuple(np.multiply(right_wrist,[640,480]).astype(int)),5,(255,255,255),cv2.FILLED)
-                              cv2.line(image,tuple(np.multiply(right_elbow,[640,480]).astype(int)),tuple(np.multiply(right_shoulder,[640,480]).astype(int)),(255,255,255),2)
-                              cv2.line(image,tuple(np.multiply(right_wrist,[640,480]).astype(int)),tuple(np.multiply(right_elbow,[640,480]).astype(int)),(255,255,255),2)
+                              cv2.circle(image,tuple(np.multiply(left_knee,[640,480]).astype(int)),5,(255,255,255),cv2.FILLED)
+                              cv2.circle(image,tuple(np.multiply(left_ankle,[640,480]).astype(int)),5,(255,255,255),cv2.FILLED)
+                              cv2.circle(image,tuple(np.multiply(left_hip,[640,480]).astype(int)),5,(255,255,255),cv2.FILLED)
+                              cv2.line(image,tuple(np.multiply(left_knee,[640,480]).astype(int)),tuple(np.multiply(left_hip,[640,480]).astype(int)),(255,255,255),2)
+                              cv2.line(image,tuple(np.multiply(left_ankle,[640,480]).astype(int)),tuple(np.multiply(left_knee,[640,480]).astype(int)),(255,255,255),2)
+                              cv2.circle(image,tuple(np.multiply(right_knee,[640,480]).astype(int)),5,(255,255,255),cv2.FILLED)
+                              cv2.circle(image,tuple(np.multiply(right_ankle,[640,480]).astype(int)),5,(255,255,255),cv2.FILLED)
+                              cv2.circle(image,tuple(np.multiply(right_hip,[640,480]).astype(int)),5,(255,255,255),cv2.FILLED)
+                              cv2.line(image,tuple(np.multiply(right_knee,[640,480]).astype(int)),tuple(np.multiply(right_ankle,[640,480]).astype(int)),(255,255,255),2)
+                              cv2.line(image,tuple(np.multiply(right_hip,[640,480]).astype(int)),tuple(np.multiply(right_knee,[640,480]).astype(int)),(255,255,255),2)
 
                               if left_angle > 160 and right_angle > 160:
                                     stage= "Down"
