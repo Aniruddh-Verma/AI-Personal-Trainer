@@ -1,67 +1,108 @@
-import sqlalchemy
+from Bicep_Curl import main as bicep_curl
+from squats import main as squat 
 from sqlalchemy import create_engine
 from sqlalchemy import engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import scoped_session
 from project_orm import User
-from flask import Flask,session,flash,redirect,render_template,url_for
-from flask.globals import request
 from utils import *
+from flask import Flask,session,flash,redirect,render_template,url_for, request
 
 app = Flask(__name__)
 app.secret_key = 'AI personal Trainer'
-engine = create_engine('sqlite:///database.sqlite')
-session = sessionmaker(bind=engine)
-sess = session()
 
-@app.route('/', methods=['GET', 'POST'])
+def get_db():
+    engine = create_engine('sqlite:///database.sqlite')
+    Session = scoped_session(sessionmaker(bind=engine))
+    return Session()
+
+@app.route('/',methods=['GET','POST'])
 def index():
-    return render_template('base.html',title='login')
+    if request.method == 'POST':
+        email = request.form.get('email')
+        password = request.form.get('password')
+        if email :
+            if password and len(password)>=6:
+                try:
+                    sess = get_db()
+                    user = sess.query(User).filter_by(email=email,password=password).first()
+                    if user:
+                        session['isauth'] = True
+                        session['email'] = user.email
+                        session['id'] = user.id
+                        session['name'] = user.name
+                        del sess
+                        flash('login successfull','success')
+                        return redirect('/home')
+                    else:
+                        flash('email or password is wrong','danger')
+                except Exception as e:
+                    flash(e,'danger')
+    return render_template('index.html',title='login')
 
-@app.route('/signin',methods=['GET','POST'])
+@app.route('/signup',methods=['GET','POST'])
 def signup():
-      if request.method == 'POST':
-            name = request.form.get('name')
-            email = request.form.get('email') 
-            password = request.form.get('password')
-            cpassword = request.form.get('cpassword')
-            if name and len(name) >= 3:
-                  if email and validate_email(email) == True: 
-                        if password and len(password)>= 6:
-                              if cpassword and cpassword == password:
-                                    try: 
-                                          new_user = User(name=name,email=email,password=password)
-                                          sess.add(new_user)
-                                          sess.commit()
-                                          flash('Account created successfully','success')
-                                          return redirect("home.html")
-                                    except:
-                                         flash('email already exists','danger')
-                              else:
-                                   flash('confirm password is not matching','danger')
-                        else:
-                             flash('password is of 6 characters or more','danger')
-                  else:
-                       flash('email is not valid','danger')
+    if request.method == 'POST':
+        name = request.form.get('name')
+        email = request.form.get('email')
+        password = request.form.get('password')
+        cpassword = request.form.get('cpassword')
+        if name and len(name) >= 3:
+            if email and validate_email(email):
+                if password and len(password)>=6:
+                    if cpassword and cpassword == password:
+                        try:
+                            sess = get_db()
+                            newuser = User(name=name,email=email,password=password)
+                            sess.add(newuser)
+                            sess.commit()
+                            del sess
+                            flash('registration successful','success')
+                            return redirect('/')
+                        except:
+                            flash('email account already exists','danger')
+                    else:
+                        flash('confirm password does not match','danger')
+                else:
+                    flash('password must be of 6 or more characters','danger')
             else:
-                 flash('name is not valid must contain 3 or more letters','danger')
-      return render_template('signup.html',title='register')
-
+                flash('invalid email','danger')
+        else:
+            flash('invalid name, must be 3 or more characters','danger')
+    return render_template('signup.html',title='register')
 
 @app.route('/forgot',methods=['GET','POST'])
 def forgot():
     return render_template('forgot.html',title='forgot password')
 
-@app.route('/Home',methods=['GET','POST'])
+@app.route('/home',methods=['GET','POST'])
 def home():
-    return render_template('home.html',title='home')
+    if session.get('isauth'):
+        username = session.get('name')
+        return render_template('home.html',title=f'home|{username}')
+    flash('please login to continue','warning')
+    return redirect('/')
 
-@app.route('/About',methods=['GET','POST'])
-def about_us():
-    return render_template('About.html',title='About Us')
+@app.route('/about')
+def about():
+    return render_template('about.html',title='About Us')
 
-@app.route('/Logout',methods=['GET','POST'])
+@app.route('/logout')
 def logout():
-    return redirect('home.html',title='Logout')
+    if session.get('isauth'):
+        session.clear()
+        flash('you have been logged out','warning')
+    return redirect('/')
+
+@app.route('/bicep')
+def bicep_exercise():
+    bicep_curl()
+    return redirect('/home')
+
+@app.route('/squat')
+def squat_exercise():
+    squat()
+    return redirect('/home')
 
 
 if __name__ == '__main__':

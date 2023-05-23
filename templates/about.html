@@ -3,7 +3,98 @@
 {% block css %}{% endblock %}
 
 {% block body %}
-      <h1>About us</h1>
+<!DOCTYPE html>
+<html>
+<head>
+      <title>About Page</title>
+      <style>
+            body {
+                  font-family: Arial, sans-serif;
+            }
+    
+            h1 {
+                  text-align: center;
+            }
+    
+            .member {
+                  display: flex;
+                  justify-content: center;
+                  align-items: center;
+                  margin-bottom: 40px;
+            }
+    
+            .member-image {
+                  width: 150px;
+                  height: 150px;
+                  border-radius: 50%;
+                  overflow: hidden;
+            }
+    
+            .member-image img {
+                  width: 100%;
+                  height: 100%;
+                  object-fit: cover;
+            }
+    
+            .member-details {
+                  margin-left: 20px;
+            }
+    
+            .member-name {
+                  font-size: 24px;
+                  font-weight: bold;
+                  margin-bottom: 5px;
+            }
+    
+            .member-role {
+                  font-size: 18px;
+                  color: #888;
+                  margin-bottom: 10px;
+            }
+    
+            .member-description {
+                  font-size: 16px;
+            }
+      </style>
+</head>
+<body>
+  <h1>About Our Team</h1>
+  
+  <div class="member">
+      <div class="member-image">
+            <img src="/static/images/anirudh.jpg" alt="Member 1">
+      </div>
+    <div class="member-details">
+      <div class="member-name">Anirudh Verma</div>
+      <div class="member-role">Backend Developer</div>
+      <div class="member-description"></div>
+    </div>
+  </div>
+  
+  <div class="member">
+    <div class="member-image">
+      <img src="/static/images/himanshu.jpg" alt="Member 2">
+    </div>
+    <div class="member-details">
+      <div class="member-name">Himanshu Dixit</div>
+      <div class="member-role">Fronted Developer</div>
+      <div class="member-description"></div>
+    </div>
+  </div>
+  
+  <div class="member">
+    <div class="member-image">
+      <img src="/static/images/anas.jpg" alt="Member 3">
+    </div>
+    <div class="member-details">
+      <div class="member-name">Mohd Anas</div>
+      <div class="member-role">Frontend Developer</div>
+      <div class="member-description"></div>
+    </div>
+  </div>
+</body>
+</html>
+
 {% endblock %}
 
 {% block js %}{% endblock %}

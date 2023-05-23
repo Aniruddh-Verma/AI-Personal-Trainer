@@ -8,8 +8,10 @@ mp_pose = mp.solutions.pose
 # Curl Counter Vaariables 
 counter = 0 
 stage = None
-      
-def calculate_squats_angle(a,b,c):
+
+
+# Single Arm Curling      
+def calculate_sqauts_angle(a,b,c):
       a=np.array(a) #First
       b=np.array(b) # mid
       c=np.array(c) #End
@@ -22,9 +24,10 @@ def calculate_squats_angle(a,b,c):
       return angle
 
 # Double Arm Curling
-def calculate_both_leg_squats(left=[],right=[]):
-      left_angle = calculate_squats_angle(left[0],left[1],left[2])
-      right_angle = calculate_squats_angle(right[0],right[1],right[2])
+def calculate_both_squats(left=[],right=[]):
+      left_angle = calculate_sqauts_angle(left[0],left[1],left[2])
+      right_angle = calculate_sqauts_angle(right[0],right[1],right[2])
+      print(f'Left Angle: {left_angle} Right Angle: {right_angle}')
       return left_angle,right_angle
 
 # Getting Coordinates of joints 
@@ -34,23 +37,23 @@ def get_coords(landmarks,point):
 # Visualizing Text
 def render_squats(image,points,win_size=[640,480]):
       white = (255,255,255)
-      cv2.putText(image,f'{points["Knee"]:.1f}',tuple(np.multiply(points["Knee"],win_size).astype(int)),cv2.FONT_HERSHEY_SIMPLEX, 0.5,white,2, cv2.LINE_AA)
-      cv2.circle(image,tuple(np.multiply(points["Hip"],[640,480]).astype(int)),5,white,cv2.FILLED)
+      cv2.putText(image,f'{points["elbow"]:.1f}',tuple(np.multiply(points["elbow"],win_size).astype(int)),cv2.FONT_HERSHEY_SIMPLEX, 0.5,white,2, cv2.LINE_AA)
+      cv2.circle(image,tuple(np.multiply(points["hip"],[640,480]).astype(int)),5,white,cv2.FILLED)
       cv2.circle(image,tuple(np.multiply(points["Knee"],[640,480]).astype(int)),5,white,cv2.FILLED)
       cv2.circle(image,tuple(np.multiply(points["Ankle"],[640,480]).astype(int)),5,white,cv2.FILLED)
-      cv2.line(image,tuple(np.multiply(points["Hip"],[640,480]).astype(int)),tuple(np.multiply(points["Knee"],[640,480]).astype(int)),white,2)
-      cv2.line(image,tuple(np.multiply(points["Ankle"],[640,480]).astype(int)),tuple(np.multiply(points["Knee"],[640,480]).astype(int)),white,2)
+      cv2.line(image,tuple(np.multiply(points["Knee"],[640,480]).astype(int)),tuple(np.multiply(points["Hip"],[640,480]).astype(int)),white,2)
+      cv2.line(image,tuple(np.multiply(points["Knee"],[640,480]).astype(int)),tuple(np.multiply(points["Ankle"],[640,480]).astype(int)),white,2)
 
      
 
-def show_excercise(video, ex=3, min_detection_confidence=0.5, min_tracking_confidence=0.5, **points[]):
+def show_excercise(video, ex=2, min_detection_confidence=0.5, min_tracking_confidence=0.5, *points):
       global counter,stage
       with mp_pose.Pose(min_detection_confidence=min_detection_confidence, min_tracking_confidence=min_tracking_confidence) as pose:    #importing Pose model as a variable pose
             while video.isOpened():       
-                  img = video.read()  
+                  state,image = video.read()  
                   
                   # RECOLOR IMAGE
-                  image = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
+                  image = cv2.cvtColor(image,cv2.COLOR_BGR2RGB)
                   image.flags.writeable = False
 
                   # Make Detection
@@ -65,62 +68,66 @@ def show_excercise(video, ex=3, min_detection_confidence=0.5, min_tracking_confi
 
 
                         landmarks=results.pose_landmarks.landmark
-                        if landmarks != None:
+                        # print(f'Landmarks : {landmarks}')
+                        if len(landmarks)>0:
                               # Getting Coordinates
                               joints = {}
                               if len(points) == 3 and ex==1:
                                     for name, point in points.items():
                                           joints[name] = get_coords(landmarks,point)
                                     
-                                    angle = calculate_squats_angle(joints['Hip'],joints['Knee'],joints['Ankle'])
+                                    angle = calculate_sqauts_angle(joints['Knee'],joints['Hip'],joints['Ankle'])
                                     
                                     #Visualize Text 
-                                    render_squats(img,results,points)
+                                    render_bicep_curl(img,results,points)
 
                         
                                     # Curl Counter Logic 
                                     if angle > 160:
-                                          stage= "Down" 
-                                    if angle < 55 and stage == "Down":
-                                          stage= "Up"
+                                          stage= "Up" 
+                                    if angle < 90 and stage == "Up":
+                                          stage= "Down"
                                           counter += 1
                                           print(counter)
                               
 
                               if len(points) == 6 and ex==2:
-                                    left_hip = [landmarks[points[0].value].x,landmarks[points[0].value].y]
-                                    left_knee = [landmarks[points[1].value].x,landmarks[points[1].value].y]
-                                    left_ankle= [landmarks[points[2].value].x,landmarks[points[2].value].y]
-                                    right_hip = [landmarks[points[3].value].x,landmarks[points[3].value].y]
-                                    right_knee = [landmarks[points[4].value].x,landmarks[points[4].value].y]
+                                    left_knee = [landmarks[points[0].value].x,landmarks[points[0].value].y]
+                                    left_hip = [landmarks[points[1].value].x,landmarks[points[1].value].y]
+                                    left_ankle = [landmarks[points[2].value].x,landmarks[points[2].value].y]
+                                    right_knee = [landmarks[points[3].value].x,landmarks[points[3].value].y]
+                                    right_hip = [landmarks[points[4].value].x,landmarks[points[4].value].y]
                                     right_ankle = [landmarks[points[5].value].x,landmarks[points[5].value].y]
-
+                              print(f'Left Knee: {left_knee} Left Ankle: {left_ankle} Left Hip: {left_hip}')
                               # Calculating Angles
-                              left_angle,right_angle = calculate_both_leg_squats([left_ankle,left_knee,left_hip],[right_ankle,right_knee,right_hip])
+                              left_angle,right_angle = calculate_both_squats([left_hip,left_knee,left_ankle],[right_hip,right_knee,right_ankle])
                               cv2.putText(image,f'{left_angle:.1f}',
                                           tuple(np.multiply(left_knee,[640,480]).astype(int)),
                                           cv2.FONT_HERSHEY_SIMPLEX, 0.5,(255,255,255),2, cv2.LINE_AA)
                               cv2.putText(image,f'{right_angle:.1f}',
                                           tuple(np.multiply(right_knee,[640,480]).astype(int)),
                                           cv2.FONT_HERSHEY_SIMPLEX, 0.5,(255,255,255),2, cv2.LINE_AA)
+                              cv2.circle(image,tuple(np.multiply(left_hip,[640,480]).astype(int)),5,(255,255,255),cv2.FILLED)
                               cv2.circle(image,tuple(np.multiply(left_knee,[640,480]).astype(int)),5,(255,255,255),cv2.FILLED)
                               cv2.circle(image,tuple(np.multiply(left_ankle,[640,480]).astype(int)),5,(255,255,255),cv2.FILLED)
-                              cv2.circle(image,tuple(np.multiply(left_hip,[640,480]).astype(int)),5,(255,255,255),cv2.FILLED)
+                              cv2.line(image,tuple(np.multiply(left_hip,[640,480]).astype(int)),tuple(np.multiply(left_knee,[640,480]).astype(int)),(255,255,255),2)
                               cv2.line(image,tuple(np.multiply(left_knee,[640,480]).astype(int)),tuple(np.multiply(left_hip,[640,480]).astype(int)),(255,255,255),2)
-                              cv2.line(image,tuple(np.multiply(left_ankle,[640,480]).astype(int)),tuple(np.multiply(left_knee,[640,480]).astype(int)),(255,255,255),2)
+                              cv2.circle(image,tuple(np.multiply(right_hip,[640,480]).astype(int)),5,(255,255,255),cv2.FILLED)
                               cv2.circle(image,tuple(np.multiply(right_knee,[640,480]).astype(int)),5,(255,255,255),cv2.FILLED)
                               cv2.circle(image,tuple(np.multiply(right_ankle,[640,480]).astype(int)),5,(255,255,255),cv2.FILLED)
-                              cv2.circle(image,tuple(np.multiply(right_hip,[640,480]).astype(int)),5,(255,255,255),cv2.FILLED)
-                              cv2.line(image,tuple(np.multiply(right_knee,[640,480]).astype(int)),tuple(np.multiply(right_ankle,[640,480]).astype(int)),(255,255,255),2)
                               cv2.line(image,tuple(np.multiply(right_hip,[640,480]).astype(int)),tuple(np.multiply(right_knee,[640,480]).astype(int)),(255,255,255),2)
+                              cv2.line(image,tuple(np.multiply(right_knee,[640,480]).astype(int)),tuple(np.multiply(right_hip,[640,480]).astype(int)),(255,255,255),2)
+                              
 
+                              # Curl Counter Logic
+                              
                               if left_angle > 160 and right_angle > 160:
-                                    stage= "Down"
-                              if left_angle < 55 and right_angle < 55 and stage == "Down":
                                     stage= "Up"
+                              if left_angle < 90 and right_angle < 90 and stage == "Up":
+                                    stage= "Down"
                                     counter += 1
                                     print(counter)  
-
+                        else: print("No pose detected")
 
                   except:
                         pass      
@@ -158,3 +165,20 @@ def show_excercise(video, ex=3, min_detection_confidence=0.5, min_tracking_confi
                         cv2.destroyAllWindows()
                         break
 
+def main():
+      video = cv2.VideoCapture(0)  
+# left bicep curl
+# show_excercise(video,1,mp_pose.PoseLandmark.LEFT_SHOULDER,mp_pose.PoseLandmark.LEFT_ELBOW,mp_pose.PoseLandmark.LEFT_WRIST)
+# right bicep curl
+# show_excercise(video,mp_pose.PoseLandmark.RIGHT_SHOULDER,mp_pose.PoseLandmark.RIGHT_ELBOW,mp_pose.PoseLandmark.RIGHT_WRIST)
+# both bicep curl
+      show_excercise(video,
+                  2,
+                  .5,
+                  .5,
+                  mp_pose.PoseLandmark.LEFT_HIP,
+                  mp_pose.PoseLandmark.LEFT_KNEE,
+                  mp_pose.PoseLandmark.LEFT_ANKLE,
+                  mp_pose.PoseLandmark.RIGHT_HIP,
+                  mp_pose.PoseLandmark.RIGHT_KNEE,
+                  mp_pose.PoseLandmark.RIGHT_ANKLE)
